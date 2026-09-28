@@ -19,7 +19,9 @@ both) and your existing `ForeverQuestMarkDB` settings carry over.
 - **Refresh fixes.** Retail nameplates store their unit as `unitToken`; upstream looked up `namePlateUnitToken`, so
   icons never refreshed when quest progress changed or after `/reload`. Also: quest log bursts are batched into
   one rescan per 0.2s, and each new nameplate is checked again after 0.5s.
-- **Instances.** Talk/interact objectives get the other icon there too; own-nameplate check is secret-value safe.
+- **Instances and scenarios.** Tooltip lines are hidden from addons there, so the icon is guessed from the quest
+  log using the same classification (so "… slain" progress bars count as kills); enemies prefer a kill objective,
+  then loot; progress bars show their percentage. The own-nameplate check is secret-value safe.
 - **Retail saving.** The Forever-beta SavedVariables workaround (per-character mirror, save stamps, `!ForeverData`
   setup scripts) is removed; settings save the normal retail way.
 - Cleanup: unused parts of the shared settings kit (Edit Mode overlays, list/number/text controls) removed;

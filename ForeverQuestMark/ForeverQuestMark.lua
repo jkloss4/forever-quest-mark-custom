@@ -48,18 +48,27 @@ end
 -- by killing). "defeat" also covers "defeated". Only English wording is recognised.
 local KILL_WORDS = { "slain", "killed", "defeat" }
 
---- The icon for a tooltip quest objective line: kill for "monster" objectives or kill wording,
---- loot for "item" objectives, other for any other known objective type (interact, use, ...).
---- Lines that match no quest log objective keep the original behaviour: loot unless kill wording.
-local function ObjectiveIcon(text)
-    local kind = ObjectiveKinds()[NormalizeObjective(text)]
+--- The icon for an objective from its quest log type and text: kill for "monster" objectives or
+--- kill wording, loot for "item" objectives, other for any other known objective type (interact,
+--- use, ...). An objective of unknown type keeps the original behaviour: loot unless kill wording.
+--- Used for both tooltip lines (open world) and quest log objectives (instance fallback).
+--- @param kind string|nil The quest log objective type, if known.
+--- @param text string|nil The objective text.
+local function ClassifyObjective(kind, text)
     if kind == "monster" or kind == "item" then return KindIcon(kind) end
 
-    local lower = text:lower()
-    for _, word in ipairs(KILL_WORDS) do
-        if lower:find(word, 1, true) then return DB.kill end
+    if text then
+        local lower = text:lower()
+        for _, word in ipairs(KILL_WORDS) do
+            if lower:find(word, 1, true) then return DB.kill end
+        end
     end
     return kind and DB.other or DB.loot
+end
+
+--- The icon for a tooltip quest objective line, classified by its matching quest log objective.
+local function ObjectiveIcon(text)
+    return ClassifyObjective(ObjectiveKinds()[NormalizeObjective(text)], text)
 end
 
 -- A unit that counts for objectives of different kinds (e.g. a kill and a loot objective) shows one
@@ -104,23 +113,49 @@ local function QuestInfo(unit)
     return marks[1] and marks or nil
 end
 
+--- Whether the player can attack the unit; nil when unknown (e.g. a secret value in instances).
+local function IsHostile(unit)
+    local ok, hostile = pcall(UnitCanAttack, "player", unit)
+    if not ok or (issecretvalue and issecretvalue(hostile)) then return nil end
+    return hostile and true or false
+end
+
+--- Progress text for a quest log objective: "73%" for progress bars, "3/8" for counts, else "".
+local function ObjectiveProgress(questID, o)
+    if o.type == "progressbar" and GetQuestProgressBarPercent then
+        local ok, percent = pcall(GetQuestProgressBarPercent, questID)
+        if ok and percent and not (issecretvalue and issecretvalue(percent)) then
+            return math.floor(percent) .. "%"
+        end
+    end
+    if o.numRequired and o.numRequired > 1 then
+        return o.numFulfilled .. "/" .. o.numRequired
+    end
+    return ""
+end
+
 -- Instance fallback: tooltips are secret there, so guess the objective kind from the quest log.
--- Picks the incomplete objective whose text names the unit, else the one kind if all open objectives
--- on this map share it. Returns atlas and progress text ("" when unsure which objective it is).
+-- Picks the incomplete objective whose text names the unit; else, for a hostile unit, a kill
+-- objective if there is one (talk/interact objectives don't apply to enemies), then a loot one;
+-- else the one kind if all open objectives on this map share it. Returns atlas and progress text
+-- (progress only when it's clear which objective it is).
 local function LogGuess(unit)
     local name = UnitName(unit)
     if issecretvalue and issecretvalue(name) then name = nil end
-    local kinds, kindCount, only, count = {}, 0, nil, 0
+    local perKind, kindCount, only, count = {}, 0, nil, 0
     for i = 1, C_QuestLog.GetNumQuestLogEntries() do
         local info = C_QuestLog.GetInfo(i)
         if info and not info.isHeader and info.isOnMap then
             for _, o in ipairs(C_QuestLog.GetQuestObjectives(info.questID) or {}) do
                 if not o.finished and o.type then
-                    local icon = KindIcon(o.type)
-                    local prog = o.numRequired and o.numRequired > 1 and (o.numFulfilled .. "/" .. o.numRequired) or ""
+                    local icon = ClassifyObjective(o.type, o.text)
+                    local prog = ObjectiveProgress(info.questID, o)
                     if name and o.text and o.text:find(name, 1, true) then return icon, prog end
-                    if not kinds[icon] then
-                        kinds[icon] = true
+                    local entry = perKind[icon]
+                    if entry then
+                        entry.count = entry.count + 1
+                    else
+                        perKind[icon] = { count = 1, progress = prog }
                         kindCount = kindCount + 1
                     end
                     count = count + 1
@@ -130,7 +165,20 @@ local function LogGuess(unit)
         end
     end
     if count == 1 then return only[1], only[2] end
-    if kindCount == 1 then return only[1], "" end
+
+    --- The icon for a kind, with its progress when it's the only objective of that kind.
+    local function pick(icon)
+        local entry = perKind[icon]
+        return icon, entry.count == 1 and entry.progress or ""
+    end
+
+    -- Unknown counts as hostile: in instances, where this fallback runs, addons don't get friendly
+    -- nameplates, so a unit whose hostility is hidden is almost certainly an enemy.
+    if IsHostile(unit) ~= false then
+        if perKind[DB.kill] then return pick(DB.kill) end
+        if perKind[DB.loot] then return pick(DB.loot) end
+    end
+    if kindCount == 1 then return pick(only[1]) end
     return DB.loot, "" -- mixed or unknown: loot is the likelier kind for a named-but-unmatched mob
 end
 

@@ -45,14 +45,15 @@ local function KindIcon(objectiveType)
 end
 
 -- Wording fallback for kills the quest log doesn't type as "monster" (e.g. progress bars filled
--- by killing). "defeat" also covers "defeated". Only English wording is recognised.
-local KILL_WORDS = { "slain", "killed", "defeat" }
+-- by killing). Each matches at the start of a word, so "kill" covers "killed" but not "skill", and
+-- "defeat" covers "defeated". Only English wording is recognised.
+local KILL_WORDS = { "%f[%a]slay", "%f[%a]slain", "%f[%a]kill", "%f[%a]defeat" }
 
 local function HasKillWording(text)
     if not text then return false end
     local lower = text:lower()
-    for _, word in ipairs(KILL_WORDS) do
-        if lower:find(word, 1, true) then return true end
+    for _, pattern in ipairs(KILL_WORDS) do
+        if lower:find(pattern) then return true end
     end
     return false
 end
@@ -61,21 +62,23 @@ end
 --- for kill wording or "monster" objectives, other for any other known objective type (interact,
 --- use, ...). The quest log also types talk-to objectives ("Speak with X") as "monster", so a
 --- "monster" objective without kill wording on a unit that can't be attacked counts as other.
+--- A progress bar on a unit that can be attacked is filled by killing it, so it counts as kill.
 --- An objective of unknown type keeps the original behaviour: loot unless kill wording.
 --- Used for both tooltip lines (open world) and quest log objectives (instance fallback).
 --- @param kind string|nil The quest log objective type, if known.
 --- @param text string|nil The objective text.
---- @param friendly boolean|nil Whether the unit is known not to be attackable.
-local function ClassifyObjective(kind, text, friendly)
+--- @param hostile boolean|nil Whether the unit can be attacked; nil when unknown.
+local function ClassifyObjective(kind, text, hostile)
     if kind == "item" then return KindIcon(kind) end
     if HasKillWording(text) then return DB.kill end
-    if kind == "monster" then return friendly and DB.other or DB.kill end
+    if kind == "monster" then return hostile == false and DB.other or DB.kill end
+    if kind == "progressbar" and hostile then return DB.kill end
     return kind and DB.other or DB.loot
 end
 
 --- The icon for a tooltip quest objective line, classified by its matching quest log objective.
-local function ObjectiveIcon(text, friendly)
-    return ClassifyObjective(ObjectiveKinds()[NormalizeObjective(text)], text, friendly)
+local function ObjectiveIcon(text, hostile)
+    return ClassifyObjective(ObjectiveKinds()[NormalizeObjective(text)], text, hostile)
 end
 
 --- Whether the player can attack the unit; nil when unknown (e.g. a secret value in instances).
@@ -97,7 +100,7 @@ local function QuestInfo(unit)
     if not data then return end
     if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(data) end
     local marks, seen = {}, {}
-    local friendly = IsHostile(unit) == false
+    local hostile = IsHostile(unit)
     for _, line in ipairs(data.lines or {}) do
         if TooltipUtil and TooltipUtil.SurfaceArgs then TooltipUtil.SurfaceArgs(line) end
         if line.type == Enum.TooltipDataLineType.QuestObjective and line.leftText then
@@ -113,7 +116,7 @@ local function QuestInfo(unit)
                 incomplete = true
             end
             if incomplete then
-                local icon = ObjectiveIcon(text, friendly)
+                local icon = ObjectiveIcon(text, hostile)
                 if not seen[icon] then
                     seen[icon] = true
                     marks[#marks + 1] = {
@@ -150,14 +153,14 @@ end
 local function LogGuess(unit)
     local name = UnitName(unit)
     if issecretvalue and issecretvalue(name) then name = nil end
-    local friendly = IsHostile(unit) == false
+    local hostile = IsHostile(unit)
     local perKind, kindCount, only, count = {}, 0, nil, 0
     for i = 1, C_QuestLog.GetNumQuestLogEntries() do
         local info = C_QuestLog.GetInfo(i)
         if info and not info.isHeader and info.isOnMap then
             for _, o in ipairs(C_QuestLog.GetQuestObjectives(info.questID) or {}) do
                 if not o.finished and o.type then
-                    local icon = ClassifyObjective(o.type, o.text, friendly)
+                    local icon = ClassifyObjective(o.type, o.text, hostile)
                     local prog = ObjectiveProgress(info.questID, o)
                     if name and o.text and o.text:find(name, 1, true) then return icon, prog end
                     local entry = perKind[icon]
@@ -183,7 +186,7 @@ local function LogGuess(unit)
 
     -- Unknown counts as hostile: in instances, where this fallback runs, addons don't get friendly
     -- nameplates, so a unit whose hostility is hidden is almost certainly an enemy.
-    if not friendly then
+    if hostile ~= false then
         if perKind[DB.kill] then return pick(DB.kill) end
         if perKind[DB.loot] then return pick(DB.loot) end
     end

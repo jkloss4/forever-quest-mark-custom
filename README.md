@@ -3,8 +3,8 @@
 A personal fork, for retail and WoW: Forever, of [ForeverQuestMark](https://www.curseforge.com/projects/1702963) by
 **Ugge Zen**: shows an icon on the nameplates of units related to your active quests.
 
-The addon folder keeps the original name, `ForeverQuestMark`, so this **replaces** the upstream addon (don't install
-both) and your existing `ForeverQuestMarkDB` settings carry over.
+The addon folder is `NameplateQuestMarkers`. It keeps upstream's `ForeverQuestMarkDB` saved variable, so don't install
+it alongside the upstream addon.
 
 ## Changes from upstream
 
@@ -32,8 +32,8 @@ Slash commands: `/fqm` (settings), `/fqm kill|loot|other <atlas>`, `/fqm x|y|siz
 
 ## Install
 
-Download `ForeverQuestMark-Custom-<version>.zip` from the [latest release](../../releases/latest) and extract the
-`ForeverQuestMark` folder into `World of Warcraft\_retail_\Interface\AddOns\` (for WoW: Forever, `_classic_beta_` instead of `_retail_`).
+Download `NameplateQuestMarkers-<version>.zip` from the [latest release](../../releases/latest) and extract the
+`NameplateQuestMarkers` folder into `World of Warcraft\_retail_\Interface\AddOns\` (for WoW: Forever, `_classic_beta_` instead of `_retail_`).
 
 An addon manager that installs from GitHub releases (e.g. WowUp: *Install from URL* with this repo's URL) can also
 install and update it, **but only if the repository is public**.
@@ -47,7 +47,7 @@ To update from the command line (works for a private repo, needs `gh auth login`
 ## Developing / releasing
 
 - Test local changes: `.\scripts\install-local.ps1` copies the addon folder into `AddOns`, then `/reload`.
-- After a WoW patch: bump `## Interface:` in `ForeverQuestMark/ForeverQuestMark.toc`.
+- After a WoW patch: bump `## Interface:` in `NameplateQuestMarkers/NameplateQuestMarkers.toc`.
 - Release: `git tag v1.3.1 && git push --tags`. The [Release workflow](.github/workflows/release.yml) stamps the
   version into the TOC, builds the zip (with a `release.json` so addon managers see it's a retail and Forever build), and
   publishes the GitHub release.

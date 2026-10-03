@@ -1,6 +1,6 @@
 -- ForeverQuestMark: quest icons on nameplates. Reads the unit's tooltip data for quest objective lines
 -- and classifies each objective (kill / loot / other) from the quest log's own objective types.
-local _, ns = ...
+local addonName, ns = ...
 local icons = {}
 local Relayout -- defined below, referenced by the event handler
 -- Saved variables load after this file runs, so adopt them on ADDON_LOADED (see bottom).
@@ -344,7 +344,7 @@ ev:RegisterEvent("PLAYER_ENTERING_WORLD") -- zoning in or out of an instance
 ev:SetScript("OnEvent", function(_, event, unit)
     if event == "ADDON_LOADED" then
         -- adopt the saved table once this addon's saved variables have loaded
-        if unit == "ForeverQuestMark" then
+        if unit == addonName then
             if type(ForeverQuestMarkDB) == "table" then Mixin(DB, ForeverQuestMarkDB) end
             DB._savedAt = nil -- leftover from the old Forever-client save workaround
             ForeverQuestMarkDB = DB

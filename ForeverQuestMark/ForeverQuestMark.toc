@@ -8,5 +8,5 @@
 ## SavedVariables: ForeverQuestMarkDB
 ## AddonCompartmentFunc: ForeverQuestMark_OpenSettings
 
-Kit.lua
+SettingsKit.lua
 ForeverQuestMark.lua

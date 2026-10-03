@@ -372,9 +372,9 @@ function Relayout()
     UpdateAll()
 end
 
--- Settings page (Options > AddOns) ------------------------------------------------
-local Kit = ns.Kit
-local page = Kit.NewPage("ForeverQuestMark")
+-- Settings page (Options > AddOns), drawn in Blizzard's settings style by SettingsKit ----------------
+local Kit = ns.SettingsKit
+local page = Kit.NewPage("ForeverQuestMark", { onDefaults = function() wipe(DB); Relayout() end })
 local function Setter(key) return function(v) DB[key] = v; Relayout() end end
 local function Getter(key) return function() return DB[key] end end
 
@@ -383,34 +383,35 @@ local ICONS = { "Crosshair_Attack_32", "Crosshair_pickup_32", "Crosshair_Quest_3
     "Crosshair_Interact_32", "Crosshair_speak_32", "QuestNormal", "QuestDaily", "QuestBonusObjective", "Islands-QuestBang" }
 local function IconOptions()
     local out, seen = {}, {}
+    local function Add(atlas)
+        out[#out + 1] = { value = atlas, label = ("|A:%s:18:18|a  %s"):format(atlas, atlas) }
+        seen[atlas] = true
+    end
     for _, atlas in ipairs(ICONS) do
-        if C_Texture.GetAtlasInfo(atlas) then
-            out[#out + 1] = { atlas, ("|A:%s:18:18|a  %s"):format(atlas, atlas) }
-            seen[atlas] = true
-        end
+        if C_Texture.GetAtlasInfo(atlas) then Add(atlas) end
     end
     -- keep a custom atlas set by /fqm selectable
     for _, key in ipairs({ "kill", "loot", "other" }) do
-        if not seen[DB[key]] then out[#out + 1] = { DB[key], ("|A:%s:18:18|a  %s"):format(DB[key], DB[key]) }; seen[DB[key]] = true end
+        if not seen[DB[key]] then Add(DB[key]) end
     end
     return out
 end
 
-page:Section("General")
-page:Check("Enabled", Getter("enabled"), Setter("enabled"), "Show quest marks on nameplates.")
-page:Check("Show progress", Getter("progress"), Setter("progress"), "Show the objective progress (e.g. 3/8 or 35%) next to the icon.")
-page:Check("Hide inside instances", Getter("hideInInstances"), Setter("hideInInstances"),
+local function Pixels(v) return tostring(v) end
+
+page:Header("General")
+page:Checkbox("Enabled", Getter("enabled"), Setter("enabled"), "Show quest marks on nameplates.")
+page:Checkbox("Show Progress", Getter("progress"), Setter("progress"), "Show the objective progress (e.g. 3/8 or 35%) next to the icon.")
+page:Checkbox("Hide Inside Instances", Getter("hideInInstances"), Setter("hideInInstances"),
     "Turn marks off in dungeons, raids, battlegrounds and arenas. Inside instances the icon kind is guessed from the quest log and may be wrong when kill and loot quests mix.")
-page:Section("Icon")
-page:Slider("Size", 10, 48, 1, Getter("size"), Setter("size"))
-page:Slider("Horizontal offset", -60, 60, 1, Getter("x"), Setter("x"), nil, "Distance from the right edge of the nameplate.")
-page:Slider("Vertical offset", -60, 60, 1, Getter("y"), Setter("y"))
-page:Dropdown("Kill objective icon", IconOptions, Getter("kill"), Setter("kill"))
-page:Dropdown("Loot objective icon", IconOptions, Getter("loot"), Setter("loot"))
-page:Dropdown("Other objective icon", IconOptions, Getter("other"), Setter("other"),
+page:Header("Icon")
+page:Slider("Size", 10, 48, 1, Getter("size"), Setter("size"), Pixels, "Size of the quest mark.")
+page:Slider("Horizontal Offset", -60, 60, 1, Getter("x"), Setter("x"), Pixels, "Distance from the right edge of the nameplate.")
+page:Slider("Vertical Offset", -60, 60, 1, Getter("y"), Setter("y"), Pixels, "Distance up or down from the middle of the nameplate.")
+page:Dropdown("Kill Objective Icon", IconOptions, Getter("kill"), Setter("kill"), "Icon for units you need to kill.")
+page:Dropdown("Loot Objective Icon", IconOptions, Getter("loot"), Setter("loot"), "Icon for units that drop quest items.")
+page:Dropdown("Other Objective Icon", IconOptions, Getter("other"), Setter("other"),
     "For quest units that are neither a kill nor a loot objective, such as NPCs to talk to or things to interact with.")
-page:Section("Other")
-page:Button("Reset all settings", RESET or "Reset", function() wipe(DB); Relayout(); page:Refresh() end)
 Kit.Register(page)
 
 function ForeverQuestMark_OpenSettings() Kit.Open(page) end

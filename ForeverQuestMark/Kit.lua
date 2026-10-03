@@ -57,9 +57,9 @@ function Kit.NewPage(title)
     divider:SetAtlas("Options_HorizontalDivider", true)
     divider:SetPoint("TOP", 0, -50)
 
-    local scroll = Make("ScrollFrame", frame, "ScrollFrameTemplate", "UIPanelScrollFrameTemplate")
+    local scroll = Make("ScrollFrame", frame, "UIPanelScrollFrameTemplate", "ScrollFrameTemplate") -- the classic scroll bar, as QuickEmote uses
     scroll:SetPoint("TOPLEFT", 0, -60)
-    scroll:SetPoint("BOTTOMRIGHT", -28, 6)
+    scroll:SetPoint("BOTTOMRIGHT", -30, 8)
     local child = CreateFrame("Frame", nil, scroll)
     child:SetSize(600, 1)
     scroll:SetScrollChild(child)

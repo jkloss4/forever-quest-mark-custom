@@ -6,14 +6,14 @@
   Path to Interface\AddOns. Defaults to the retail install used on this machine.
 #>
 param(
-  [string]$Repo = "jkloss4/forever-quest-mark-custom",
+  [string]$Repo = "jkloss4/nameplate-quest-markers",
   [string]$AddOnsPath = "C:\Games\Battle.net\Games\World of Warcraft\_retail_\Interface\AddOns"
 )
 $tmp = Join-Path $env:TEMP "forever-quest-mark-custom-update"
 if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
 New-Item -ItemType Directory -Path $tmp | Out-Null
 
-gh release download --repo $Repo --pattern "ForeverQuestMark-Custom-*.zip" --dir $tmp
+gh release download --repo $Repo --pattern "NameplateQuestMarkers-*.zip" --dir $tmp
 if ($LASTEXITCODE -ne 0) { throw "gh release download failed" }
 
 $zip = Get-ChildItem $tmp -Filter *.zip | Select-Object -First 1

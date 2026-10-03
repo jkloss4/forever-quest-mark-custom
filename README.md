@@ -1,4 +1,4 @@
-# ForeverQuestMark (Custom)
+# Nameplate Quest Markers
 
 A personal fork, for retail and WoW: Forever, of [ForeverQuestMark](https://www.curseforge.com/projects/1702963) by
 **Ugge Zen**: shows an icon on the nameplates of units related to your active quests.

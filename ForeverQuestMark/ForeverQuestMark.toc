@@ -1,5 +1,5 @@
 ## Interface: 120100, 120105, 16001
-## Title: ForeverQuestMark (Custom)
+## Title: Nameplate Quest Markers
 ## Notes: Shows a quest icon on nameplates of units related to your active quests. /fqm for settings.
 ## Author: Ugge Zen
 ## IconTexture: Interface/Icons/INV_Misc_QuestionMark

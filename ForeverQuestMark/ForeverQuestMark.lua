@@ -374,7 +374,7 @@ end
 
 -- Settings page (Options > AddOns), drawn in Blizzard's settings style by SettingsKit ----------------
 local Kit = ns.SettingsKit
-local page = Kit.NewPage("ForeverQuestMark", { onDefaults = function() wipe(DB); Relayout() end })
+local page = Kit.NewPage("Nameplate Quest Markers", { onDefaults = function() wipe(DB); Relayout() end })
 local function Setter(key) return function(v) DB[key] = v; Relayout() end end
 local function Getter(key) return function() return DB[key] end end
 
@@ -422,7 +422,7 @@ SlashCmdList.FOREVERQUESTMARK = function(msg)
     if (cmd == "x" or cmd == "y" or cmd == "size") and tonumber(arg) then
         DB[cmd] = tonumber(arg)
     elseif (cmd == "kill" or cmd == "loot" or cmd == "other") and arg ~= "" then
-        if not C_Texture.GetAtlasInfo(arg) then print("ForeverQuestMark: no atlas named " .. arg); return end
+        if not C_Texture.GetAtlasInfo(arg) then print("Nameplate Quest Markers: no atlas named " .. arg); return end
         DB[cmd] = arg
     elseif cmd == "reset" then
         wipe(DB)

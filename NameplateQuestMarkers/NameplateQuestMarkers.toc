@@ -2,7 +2,7 @@
 ## Title: Nameplate Quest Markers
 ## Notes: Shows a quest icon on nameplates of units related to your active quests. /fqm for settings.
 ## Author: Ugge Zen
-## IconTexture: Interface/Icons/INV_Misc_QuestionMark
+## IconTexture: Interface/GossipFrame/AvailableQuestIcon
 ## X-License: MIT
 ## Version: 1.3.0
 ## SavedVariables: ForeverQuestMarkDB

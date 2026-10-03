@@ -414,8 +414,6 @@ page:Dropdown("Other Objective Icon", IconOptions, Getter("other"), Setter("othe
     "For quest units that are neither a kill nor a loot objective, such as NPCs to talk to or things to interact with.")
 Kit.Register(page)
 
-function ForeverQuestMark_OpenSettings() Kit.Open(page) end
-
 local debugFrame -- reused by /fqm debug to test whether SetShown accepts a secret boolean
 
 SLASH_FOREVERQUESTMARK1 = "/fqm"

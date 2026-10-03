@@ -57,14 +57,12 @@ function Kit.NewPage(title)
     divider:SetAtlas("Options_HorizontalDivider", true)
     divider:SetPoint("TOP", 0, -50)
 
-    local scroll = Make("ScrollFrame", frame, "UIPanelScrollFrameTemplate", "ScrollFrameTemplate") -- the classic scroll bar, as QuickEmote uses
-    scroll:SetPoint("TOPLEFT", 0, -60)
-    scroll:SetPoint("BOTTOMRIGHT", -30, 8)
-    local child = CreateFrame("Frame", nil, scroll)
-    child:SetSize(600, 1)
-    scroll:SetScrollChild(child)
-    scroll:SetScript("OnSizeChanged", function(_, w) if w and w > 0 then child:SetWidth(w) end end)
-    page.scroll, page.content = scroll, child
+    -- The options fit on the page, so they sit on it directly, with no scroll frame
+    local child = CreateFrame("Frame", nil, frame)
+    child:SetPoint("TOPLEFT", 0, -60)
+    child:SetPoint("TOPRIGHT", -8, -60)
+    child:SetHeight(1)
+    page.content = child
 
     frame:SetScript("OnShow", function() page:Refresh() end)
     -- Blizzard calls these on canvas pages; the kit keeps no pending state, so only refresh matters.
